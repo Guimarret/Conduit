@@ -5,3 +5,5 @@ typedef struct Task{
     char task_execution[64];
     struct Task *next;
 } Task;
+
+void scheduler(void);
