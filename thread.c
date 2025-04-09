@@ -15,6 +15,6 @@ void start_scheduler_thread() {
         perror("Failed to create thread");
         exit(EXIT_FAILURE);
     }
-    // Getting warn just with the thread_id and the makefile Werror flag dont compile irra
+    // Getting warn with just the thread_id and the makefile Werror flag dont compile irra!!
     printf("Scheduler thread started with ID: %ld\n", (unsigned long)thread_id);
 }
