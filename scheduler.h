@@ -3,7 +3,7 @@ typedef struct Task{
     int hour;
     int minute;
     char task_execution[64];
-    struct Task *next; // I think this one should be deleted and implement something like this in stack or heap future implementation
+    struct Task *next;
 } Task;
 
 void scheduler(void);
