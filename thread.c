@@ -15,6 +15,9 @@ void start_scheduler_thread() {
         perror("Failed to create thread");
         exit(EXIT_FAILURE);
     }
+    pthread_detach(thread_id);
     // Getting warn with just the thread_id and the makefile Werror flag dont compile irra!!
     printf("Scheduler thread started with ID: %ld\n", (unsigned long)thread_id);
+
+    return;
 }
