@@ -3,7 +3,12 @@
 #include <stdlib.h>
 #include "scheduler.h"
 
-void *thread_function(void *arg) {
+void *thread_scheduler_function(void *arg) {
+    scheduler();
+    return NULL;
+}
+
+void *thread_worker_function(void *arg) {
     scheduler();
     return NULL;
 }
@@ -11,13 +16,27 @@ void *thread_function(void *arg) {
 void start_scheduler_thread() {
     pthread_t thread_id;
 
-    if (pthread_create(&thread_id, NULL, thread_function, NULL) != 0) {
+    if (pthread_create(&thread_id, NULL, thread_scheduler_function, NULL) != 0) {
         perror("Failed to create thread");
         exit(EXIT_FAILURE);
     }
     pthread_detach(thread_id);
     // Getting warn with just the thread_id and the makefile Werror flag dont compile irra!!
-    printf("Scheduler thread started with ID: %ld\n", (unsigned long)thread_id);
+    printf("Thread started with ID: %ld\n", (unsigned long)thread_id);
+
+    return;
+}
+
+void init_worker_thread() {
+    pthread_t thread_id;
+
+    if (pthread_create(&thread_id, NULL, thread_worker_function, NULL) != 0) {
+        perror("Failed to create worker thread");
+        exit(EXIT_FAILURE);
+    }
+    pthread_detach(thread_id);
+
+    printf("Worker thread start with ID: %ld\n", (unsigned long)thread_id);
 
     return;
 }
