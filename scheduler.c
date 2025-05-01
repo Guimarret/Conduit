@@ -4,11 +4,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "scheduler.h"
+#include "cron.h"
 
 Task *taskListHead = NULL;
 
-int is_time_to_run(struct tm current_time, int hour, int minute){
-    return (current_time.tm_hour == hour && current_time.tm_min == minute);
+int is_time_to_run(const char *cron_expr, struct CronTime now) {
+    char *fields[5];
+    char *copy = strdup(cron_expr);
+    char *token = strtok(copy, " ");
+
+    for (int i = 0; i < 5; i++) {
+        if (!token) {
+            free(copy);
+            return 0;
+        }
+        fields[i] = token;
+        token = strtok(NULL, " ");
+    }
+
+    int result = 1;
+    result &= match_cron_field(fields[0], now.minute, 0, 59);
+    result &= match_cron_field(fields[1], now.hour, 0, 23);
+    result &= match_cron_field(fields[2], now.day_of_month, 1, 31);
+    result &= match_cron_field(fields[3], now.month, 1, 12);
+    result &= match_cron_field(fields[4], now.day_of_week, 0, 6);
+
+    free(copy);
+    return result;
 }
 
 int execute_task(char task_execution[64]){
@@ -17,7 +39,7 @@ int execute_task(char task_execution[64]){
     return 1;
 }
 
-Task* add_task(const char *name, int hour, int minute, const char *execution) {
+Task* add_task(const char *name, const char *cron_expression, const char *execution) {
     Task *new_task = malloc(sizeof(Task));
     if (new_task == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
@@ -26,9 +48,7 @@ Task* add_task(const char *name, int hour, int minute, const char *execution) {
 
     strlcpy(new_task->taskName, name, sizeof(new_task->taskName));
     strlcpy(new_task->task_execution, execution, sizeof(new_task->task_execution));
-
-    new_task->hour = hour;
-    new_task->minute = minute;
+    strlcpy(new_task->cron_expression, cron_expression, sizeof(new_task->cron_expression));
 
     new_task->next = taskListHead;
     taskListHead = new_task;
@@ -51,9 +71,17 @@ void scheduler() {
     while(1) {
         time_t now = time(NULL);
         struct tm *current_time = localtime(&now);
-        Task *current = taskListHead;
+
+        struct CronTime cronTime = {
+                    .minute = current_time->tm_min, .hour = current_time->tm_hour,
+                    .day_of_month = current_time->tm_mday,
+                    .month = current_time->tm_mon + 1,  // tm_mon is 0-11, CronTime expects 1-12
+                    .day_of_week = current_time->tm_wday  // 0-6, Sunday = 0
+                };
+
+        Task *current = taskListHead; // *current is the current task what will iterate all the other ones in a linked list
         while (current != NULL) {
-            if (is_time_to_run(*current_time, current->hour, current->minute)) {
+            if (is_time_to_run(current->cron_expression, cronTime)) {
                 execute_task(current->task_execution);
             }
             current = current->next;
