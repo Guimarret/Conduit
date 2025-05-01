@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "scheduler.h"
+#include "worker.h"
 
 void *thread_scheduler_function(void *arg) {
     scheduler();
@@ -9,7 +10,7 @@ void *thread_scheduler_function(void *arg) {
 }
 
 void *thread_worker_function(void *arg) {
-    scheduler();
+    worker(); 
     return NULL;
 }
 

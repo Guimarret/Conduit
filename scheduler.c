@@ -35,6 +35,7 @@ int is_time_to_run(const char *cron_expr, struct CronTime now) {
 
 int execute_task(char task_execution[64]){
     // #TODO add file execution, also decide if the file is gonna be in C or something else
+    // Call to worker file and thread spawn
     printf("Task to be executed trigged, %s", task_execution);
     return 1;
 }
