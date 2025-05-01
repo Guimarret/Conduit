@@ -2,4 +2,7 @@
 
 Orchestrator for bash or executions, like mage/airflow/etc..
 
-- Scheduler initial version done, still need to parse from somewhere to be actually usefull but got enough for now.
+The idea here is that the Orchestrator run any binary file passed by the scheduler struct.
+
+### Architecture:
+![Alt text](./images/Architeture.png)
