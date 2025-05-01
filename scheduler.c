@@ -73,13 +73,14 @@ void scheduler() {
         struct tm *current_time = localtime(&now);
 
         struct CronTime cronTime = {
-                    .minute = current_time->tm_min, .hour = current_time->tm_hour,
-                    .day_of_month = current_time->tm_mday,
-                    .month = current_time->tm_mon + 1,  // tm_mon is 0-11, CronTime expects 1-12
-                    .day_of_week = current_time->tm_wday  // 0-6, Sunday = 0
+                    current_time->tm_min,
+                    current_time->tm_hour,
+                    current_time->tm_mday,
+                    current_time->tm_mon + 1,  // tm_mon is 0-11, CronTime expects 1-12
+                    current_time->tm_wday  // 0-6, Sunday = 0
                 };
 
-        Task *current = taskListHead; // *current is the current task what will iterate all the other ones in a linked list
+        Task *current = taskListHead; // *current is the current task what will iterate all the other ones through the linked list
         while (current != NULL) {
             if (is_time_to_run(current->cron_expression, cronTime)) {
                 execute_task(current->task_execution);
