@@ -1,64 +1,47 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 
-int validate_cron_field(const char *field, int min, int max) {
-    if (strcmp(field, "*") == 0) {
-        return 1;
-    }
-    if (strchr(field, ',') != NULL) {
-        char *token = strtok(strdup(field), ",");
-        while (token != NULL) {
-            int value;
-            if (sscanf(token, "%d", &value) != 1 || value < min || value > max) {
-                free(token);
-                return 0;
+int match_cron_field(const char *field, int value, int min, int max) {
+    if (strcmp(field, "*") == 0) return 1;
+
+    char *copy = strdup(field);
+    char *token = strtok(copy, ",");
+    int match_found = 0;
+
+    while (token) {
+        if (strchr(token, '-')) {
+            int start, end;
+            if (sscanf(token, "%d-%d", &start, &end) == 2 &&
+                value >= start && value <= end) {
+                match_found = 1;
+                break;
             }
-            token = strtok(NULL, ",");
+        } else if (strchr(token, '/')) {
+            int base = min, step;
+            if (sscanf(token, "*/%d", &step) == 1) {
+                if (step > 0 && (value - min) % step == 0) {
+                    match_found = 1;
+                    break;
+                }
+            } else if (sscanf(token, "%d/%d", &base, &step) == 2) {
+                if (value >= base && (value - base) % step == 0) {
+                    match_found = 1;
+                    break;
+                }
+            }
+        } else {
+            int target;
+            if (sscanf(token, "%d", &target) == 1 && target == value) {
+                match_found = 1;
+                break;
+            }
         }
-        return 1;
-    }
-     if (strchr(field, '/') != NULL) {
-        int base, step;
-        if (sscanf(field, "*/%d", &step) == 1 && step > 0) {
-            return 1;
-        }
-         if (sscanf(field, "%d/%d", &base, &step) == 2 && base >= min && base <= max && step > 0) {
-            return 1;
-        }
-        return 0;
-    }
-    if (strchr(field, '-') != NULL) {
-        int start, end;
-        if (sscanf(field, "%d-%d", &start, &end) == 2 && start >= min && end <= max && start <= end) {
-            return 1;
-        }
-        return 0;
-    }
-    int value;
-    if (sscanf(field, "%d", &value) == 1 && value >= min && value <= max) {
-        return 1;
-    }
-    return 0;
-}
-
-int validate_cron_expression(const char *cron_expression) {
-    char *fields[5];
-    char *token = strtok(strdup(cron_expression), " ");
-    int i = 0;
-    while (token != NULL && i < 5) {
-        fields[i++] = token;
-        token = strtok(NULL, " ");
-    }
-    if (i != 5) {
-        return 0;
+        token = strtok(NULL, ",");
     }
 
-    if (!validate_cron_field(fields[0], 0, 59)) return 0;
-    if (!validate_cron_field(fields[1], 0, 23)) return 0;
-    if (!validate_cron_field(fields[2], 1, 31)) return 0;
-    if (!validate_cron_field(fields[3], 1, 12)) return 0;
-    if (!validate_cron_field(fields[4], 0, 6)) return 0;
-    return 1;
+    free(copy);
+    return match_found;
 }
