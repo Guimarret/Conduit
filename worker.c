@@ -2,6 +2,6 @@
 // Not sure if is the best way but looks funny to implement
 // Use the binary associated with
 
-void worker(){
-    // Implementation of worker function
+void worker(int taskId, char taskExecution[64]){
+    return;
 }
