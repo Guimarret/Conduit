@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "scheduler.h"
 #include "cron.h"
+#include "thread.h"
 
 Task *taskListHead = NULL;
 
@@ -33,11 +34,9 @@ int is_time_to_run(const char *cronExpression, struct CronTime now) {
     return result;
 }
 
-int execute_task(char task_execution[64]){
-    // #TODO add file execution, also decide if the file is gonna be in C or something else
-    // Call to worker file and thread spawn
-    printf("Task to be executed trigged, %s", task_execution);
-    return 1;
+void execute_task(Task task) {
+    spawn_worker_thread(&task);
+    printf("Task triggered: %s\n", task.taskName);
 }
 
 Task* add_task(const char *name, const char *cronExpression, const char *execution) {
