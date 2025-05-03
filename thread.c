@@ -21,7 +21,6 @@ void *thread_worker_function(void *arg) {
 
     worker(params->taskId, params->taskExecution);
 
-    free(params->taskExecution);
     free(params);
     return NULL;
 }
@@ -40,7 +39,7 @@ void start_scheduler_thread() {
     return;
 }
 
-void spawn_worker_thread(struct Task *task) {
+void spawn_worker_thread(Task *task) {
     pthread_t thread_id;
 
     if (task == NULL) {
@@ -61,8 +60,9 @@ void spawn_worker_thread(struct Task *task) {
     params->taskId = taskId;
     strcpy(params->taskExecution, task->taskExecution);
 
-    if (pthread_create(&thread_id, NULL, thread_worker_function, NULL) != 0) {
+    if (pthread_create(&thread_id, NULL, thread_worker_function, params) != 0) {
         perror("Failed to create worker thread");
+        free(params);  // Clean up on error
         exit(EXIT_FAILURE);
     }
     pthread_detach(thread_id);
