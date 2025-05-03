@@ -1,8 +1,11 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "scheduler.h"
 #include "worker.h"
+#include "thread.h"
+#include "hash.c"
 
 void *thread_scheduler_function(void *arg) {
     scheduler();
@@ -37,8 +40,26 @@ void start_scheduler_thread() {
     return;
 }
 
-void init_worker_thread() {
+void spawn_worker_thread(struct Task *task) {
     pthread_t thread_id;
+
+    if (task == NULL) {
+           fprintf(stderr, "Error: Task is NULL\n");
+           return;
+       }
+
+       // Allocate memory for parameters
+       ThreadParams* params = malloc(sizeof(ThreadParams));
+       if (params == NULL) {
+           perror("Failed to allocate memory for thread parameters");
+           exit(EXIT_FAILURE);
+    }
+
+    // To be fair this is more like testing things than anything
+    int taskId = 0;
+    taskId = hashString(task->taskName);
+    params->taskId = taskId;
+    strcpy(params->taskExecution, task->taskExecution);
 
     if (pthread_create(&thread_id, NULL, thread_worker_function, NULL) != 0) {
         perror("Failed to create worker thread");
