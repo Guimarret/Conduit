@@ -40,6 +40,7 @@ void execute_task(Task task) {
 }
 
 Task* add_task(const char *name, const char *cronExpression, const char *execution) {
+    // Still don't know the best way to set the tasks, didn't want to add in the binaries
     Task *new_task = malloc(sizeof(Task));
     if (new_task == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
