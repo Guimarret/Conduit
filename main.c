@@ -4,7 +4,7 @@
 
 int main(void){
     start_scheduler_thread();
-    init_worker_thread();
+    // spawn_worker_thread();
 
     while(1){
         printf("Main program is running\n");
