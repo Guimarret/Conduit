@@ -8,9 +8,9 @@
 
 Task *taskListHead = NULL;
 
-int is_time_to_run(const char *cron_expr, struct CronTime now) {
+int is_time_to_run(const char *cronExpression, struct CronTime now) {
     char *fields[5];
-    char *copy = strdup(cron_expr);
+    char *copy = strdup(cronExpression);
     char *token = strtok(copy, " ");
 
     for (int i = 0; i < 5; i++) {
@@ -40,7 +40,7 @@ int execute_task(char task_execution[64]){
     return 1;
 }
 
-Task* add_task(const char *name, const char *cron_expression, const char *execution) {
+Task* add_task(const char *name, const char *cronExpression, const char *execution) {
     Task *new_task = malloc(sizeof(Task));
     if (new_task == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
@@ -48,8 +48,8 @@ Task* add_task(const char *name, const char *cron_expression, const char *execut
     }
 
     strlcpy(new_task->taskName, name, sizeof(new_task->taskName));
-    strlcpy(new_task->task_execution, execution, sizeof(new_task->task_execution));
-    strlcpy(new_task->cron_expression, cron_expression, sizeof(new_task->cron_expression));
+    strlcpy(new_task->taskExecution, execution, sizeof(new_task->taskExecution));
+    strlcpy(new_task->cronExpression, cronExpression, sizeof(new_task->cronExpression));
 
     new_task->next = taskListHead;
     taskListHead = new_task;
@@ -83,8 +83,8 @@ void scheduler() {
 
         Task *current = taskListHead; // *current is the current task what will iterate all the other ones through the linked list
         while (current != NULL) {
-            if (is_time_to_run(current->cron_expression, cronTime)) {
-                execute_task(current->task_execution);
+            if (is_time_to_run(current->cronExpression, cronTime)) {
+                execute_task(*current);
             }
             current = current->next;
         }
