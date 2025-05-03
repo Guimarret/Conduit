@@ -57,11 +57,10 @@ void worker(int taskId, char taskExecution[64]){
         perror("getcwd() error");
     }
 
-    size_t total_len = strlen(cwd) + strlen(taskExecution) + 1;
+    size_t total_len = strlen(cwd) + strlen("/dags/") + strlen(taskExecution) + 1;
     char *full_path = malloc(total_len);
 
-    strcpy(full_path, cwd);
-    strcat(full_path, taskExecution);
+    strcpy(full_path, cwd); strcat(full_path, "/dags/"); strcat(full_path, taskExecution);
 
     printf("Full path for binary execution %s\n", full_path);
 

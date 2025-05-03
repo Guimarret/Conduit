@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "scheduler.h"
 #include "worker.h"
 #include "thread.h"
-#include "hash.c"
+#include "scheduler.h"
+#include "hash.h"
 
 void *thread_scheduler_function(void *arg) {
     scheduler();
