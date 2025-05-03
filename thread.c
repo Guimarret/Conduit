@@ -10,7 +10,16 @@ void *thread_scheduler_function(void *arg) {
 }
 
 void *thread_worker_function(void *arg) {
-    worker(); 
+    ThreadParams* params = (ThreadParams*)arg;
+
+    // Now you can use the parameters
+    printf("Worker processing task ID: %d, execution: %s\n",
+            params->taskId, params->taskExecution);
+
+    worker(params->taskId, params->taskExecution);
+
+    free(params->taskExecution);
+    free(params);
     return NULL;
 }
 
