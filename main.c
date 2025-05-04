@@ -2,10 +2,9 @@
 #include <unistd.h>
 #include "thread.h"
 #include "scheduler.h"
+#include "database.h"
 
 void initialize_test_tasks(void) {
-    // Clean up any existing tasks first (optional)
-    free_tasks();
 
     add_task("Daily Backup", "0 0 * * *", "backup_system");
     add_task("Hourly Log Rotation", "0 * * * *", "rotate_logs");
@@ -17,13 +16,18 @@ void initialize_test_tasks(void) {
 }
 
 int main(void){
+    sqlite3 *db;
+    db = initialize_database();
+
+    
     initialize_test_tasks();
     start_scheduler_thread();
-    // spawn_worker_thread();
 
     while(1){
         printf("Main program is running\n");
         sleep(20);
     }
+
+    shutdown_database(db);
     return 0;
 }
