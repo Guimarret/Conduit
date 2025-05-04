@@ -18,8 +18,8 @@ void initialize_test_tasks(void) {
 int main(void){
     sqlite3 *db;
     db = initialize_database();
+    dag_migration(db);
 
-    
     initialize_test_tasks();
     start_scheduler_thread();
 
