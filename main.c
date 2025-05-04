@@ -21,6 +21,9 @@ int main(void){
     dag_migration(db);
 
     initialize_test_tasks();
+
+    dag_import(db, taskListHead);
+
     start_scheduler_thread();
 
     while(1){
