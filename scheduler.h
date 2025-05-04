@@ -8,6 +8,7 @@ typedef struct Task{
     struct Task *next;
 } Task;
 
+extern Task *taskListHead;
 void scheduler(void);
 Task* add_task(const char *name, const char *cronExpression, const char *execution);
 void free_tasks(void);
