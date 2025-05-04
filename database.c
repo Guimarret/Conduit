@@ -35,7 +35,25 @@ sqlite3* dag_migration(sqlite3 *db){
     return db;
 }
 
-int insert_into_db(sqlite3 *db, Task *task){
+sqlite3* insert_into_db(sqlite3 *db, Task *task){
+    const char *sql;
+    sqlite3_stmt *stmt;
 
-    return 0;
+    sql = "INSERT INTO tasks (taskName, cronExpression, taskExecution) VALUES (?, ?, ?)";
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    sqlite3_bind_text(stmt, 1, task->taskName, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, task->cronExpression, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 3, task->taskExecution, -1, SQLITE_TRANSIENT);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    return db;
 };
+
+sqlite3* dag_import(sqlite3 *db, Task *task){
+    while (task != NULL) {
+        insert_into_db(db, task);
+        task = task->next;
+    }
+    return db;
+}
