@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
+
+#define PATH_MAX 1024
 // Thinking about creating binarys files that are executed here but idk how should i pass the other params needed in the scheduler
 // Not sure if is the best way but looks funny to implement
 // Yeah it was funny
