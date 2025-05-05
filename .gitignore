@@ -2,3 +2,5 @@
 *.o
 output
 **.db
+flake.lock
+**/result/bin/**
