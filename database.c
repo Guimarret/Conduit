@@ -52,9 +52,33 @@ sqlite3* insert_into_db(sqlite3 *db, Task *task){
 };
 
 sqlite3* dag_import(sqlite3 *db, Task *task){
-    while (task != NULL) {
-        insert_into_db(db, task);
-        task = task->next;
+    const char *sql;
+
+    sql = "SELECT * from tasks";
+    sqlite3_stmt *stmt;
+
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+    } else {
+        rc = sqlite3_step(stmt);
+        if (rc == SQLITE_ROW) {
+            printf("Table has data.\n");
+            sqlite3_finalize(stmt);
+            return db;
+        } else if (rc == SQLITE_DONE) {
+            printf("Table is empty.\n");
+            while (task != NULL) {
+                insert_into_db(db, task);
+                task = task->next;
+            }
+            printf("Dags imported");
+            sqlite3_finalize(stmt);
+            return db;
+        } else {
+            fprintf(stderr, "Error executing statement: %s\n", sqlite3_errmsg(db));
+        }
+        sqlite3_finalize(stmt);
     }
     return db;
 }
