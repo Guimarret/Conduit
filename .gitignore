@@ -3,4 +3,4 @@
 output
 **.db
 flake.lock
-**/result/bin/**
+result/bin
