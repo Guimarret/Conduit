@@ -35,11 +35,12 @@ sqlite3* dag_migration(sqlite3 *db){
     return db;
 }
 
+// Change to overwrite cause its creating new in every run
 sqlite3* insert_into_db(sqlite3 *db, Task *task){
     const char *sql;
     sqlite3_stmt *stmt;
 
-    sql = "INSERT INTO tasks (taskName, cronExpression, taskExecution) VALUES (?, ?, ?)";
+    sql = "REPLACE INTO tasks (taskName, cronExpression, taskExecution) VALUES (?, ?, ?)";
     sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     sqlite3_bind_text(stmt, 1, task->taskName, -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 2, task->cronExpression, -1, SQLITE_TRANSIENT);
