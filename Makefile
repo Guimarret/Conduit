@@ -8,13 +8,12 @@ OBJS = $(SRCS:.c=.o)
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) -lsqlite3 -o $(TARGET)
+	$(CC) $(OBJS) -lsqlite3 -lcivetweb -o $(TARGET)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(OBJS) $(TARGET)
-
 
 .PHONY: all clean
