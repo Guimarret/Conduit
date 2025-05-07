@@ -16,7 +16,7 @@ int main(void) {
     mg_init_library(0);
 
     const char *options[] = {
-        "listening_ports", "8080",
+        "listening_ports", "9000",
         "document_root", "./webroot", // Path to static files
         "enable_directory_listing", "no", // Optional
         NULL
@@ -26,7 +26,7 @@ int main(void) {
     mg_set_request_handler(ctx, "/home", home_handler, NULL);
     mg_set_request_handler(ctx, "/dash", dash_handler, NULL);
 
-    printf("Server running at http://localhost:8080. Press Enter to quit.\n");
+    printf("Server running at http://localhost:9000. Press Enter to quit.\n");
     getchar();
 
     mg_stop(ctx);
