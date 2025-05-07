@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>DAG Dashboard</title>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <link rel="stylesheet" href="../css/dash.css" />
+    </head>
+    <body>
+        <script src="../js/dash.js"></script>
+        <div class="dashboard-container">
+            <header>
+                <h1>DAG Dashboard</h1>
+                <div class="search-container">
+                    <input
+                        type="text"
+                        id="search-dags"
+                        placeholder="Search DAGs..."
+                    />
+                    <button id="refresh-btn">Refresh</button>
+                </div>
+            </header>
+            <div class="dags-container" id="dags-container"></div>
+        </div>
+    </body>
+</html>
