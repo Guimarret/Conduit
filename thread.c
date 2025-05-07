@@ -6,6 +6,7 @@
 #include "thread.h"
 #include "scheduler.h"
 #include "hash.h"
+#include "webserver.h"
 
 void *thread_scheduler_function(void *arg) {
     scheduler();
@@ -25,6 +26,12 @@ void *thread_worker_function(void *arg) {
     return NULL;
 }
 
+void *thread_webserver_function(void *arg) {
+    sqlite3 *db = (sqlite3 *)arg;
+    initialize_webserver(db);
+    return NULL;
+}
+
 void start_scheduler_thread() {
     pthread_t thread_id;
 
@@ -34,6 +41,19 @@ void start_scheduler_thread() {
     }
     pthread_detach(thread_id);
     // Getting warn with just the thread_id and the makefile Werror flag dont compile irra!!
+    printf("Thread started with ID: %ld\n", (unsigned long)thread_id);
+
+    return;
+}
+
+void start_webserver_thread(sqlite3 *db) {
+    pthread_t thread_id;
+
+    if (pthread_create(&thread_id, NULL, thread_webserver_function, db) != 0) {
+        perror("Failed to create thread");
+        exit(EXIT_FAILURE);
+    }
+    pthread_detach(thread_id);
     printf("Thread started with ID: %ld\n", (unsigned long)thread_id);
 
     return;

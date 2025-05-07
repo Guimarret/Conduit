@@ -1,12 +1,14 @@
 #ifndef CONDUIT_THREAD_H
 #define CONDUIT_THREAD_H
 
-// Forward declaration instead of including scheduler.h
-struct Task;  // Just declare the struct without defining it
-typedef struct Task Task;  // Define the typedef
+#include "database.h"
+
+struct Task;
+typedef struct Task Task;
 
 void start_scheduler_thread(void);
 void spawn_worker_thread(Task *task);
+void start_webserver_thread(sqlite3 *db);
 
 typedef struct ThreadParams{
     int taskId;
