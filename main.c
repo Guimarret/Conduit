@@ -22,8 +22,10 @@ int main(void){
 
     initialize_test_tasks();
 
+
     dag_import(db, taskListHead);
 
+    start_webserver_thread(db);
     start_scheduler_thread();
 
     while(1){
