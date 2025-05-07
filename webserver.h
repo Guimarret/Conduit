@@ -1,1 +1,3 @@
-#include <civetweb/civetweb.h>
+#include "database.h"
+
+int initialize_webserver(sqlite3 *db);
