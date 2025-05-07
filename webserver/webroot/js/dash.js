@@ -31,6 +31,11 @@ function renderDags(dags) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const get_dags = async () => {
+    const req = await fetch("http://127.0.0.1:8080/api/dag_data");
+    const stuff = await req.json();
+    return stuff;
+  };
   renderDags(sampleDags);
 
   document.getElementById("search-dags").addEventListener("input", (e) => {
