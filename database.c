@@ -88,48 +88,52 @@ sqlite3* dag_import(sqlite3 *db, Task *task){
 char* dags_status(sqlite3 *db){
     const char *sql = "SELECT id, taskName, cronExpression, taskExecution FROM tasks";
     sqlite3_stmt *stmt;
-    char *json_result = NULL;
-    size_t json_size = 0;
-    size_t json_capacity = 1024;
 
-    json_result = malloc(json_capacity);
+    size_t buffer_size = 1024;
+    char *json_result = malloc(buffer_size);
     if (!json_result) return NULL;
 
-    strcpy(json_result, "{\"tasks\": [");
-    json_size = strlen(json_result);
-
+    int pos = 0;
+    pos += snprintf(json_result + pos, buffer_size - pos, "{\"tasks\":[");
 
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    if (rc != SQLITE_OK){
-        fprintf(stderr, "Database error: %s\n", sqlite3_errmsg(db));
+    if (rc != SQLITE_OK) {
         free(json_result);
         return NULL;
     }
 
     int first_row = 1;
-    while((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         int id = sqlite3_column_int(stmt, 0);
         const char *name = (const char*)sqlite3_column_text(stmt, 1);
         const char *cron = (const char*)sqlite3_column_text(stmt, 2);
         const char *exec = (const char*)sqlite3_column_text(stmt, 3);
 
-        char row_buffer[512];
-        snprintf(row_buffer, sizeof(row_buffer),
-                         "%s{\"id\":%d,\"name\":\"%s\",\"schedule\":\"%s\",\"execution\":\"%s\"}",
-                         first_row ? "" : ",", id, name, cron, exec);
-        first_row = 0;
-        if(json_size + strlen(row_buffer) >= json_capacity){
-            json_capacity *= 2;
-            json_result = realloc(json_result, json_capacity);
-            if (!json_result) return NULL;
+        if (!name) name = "";
+        if (!cron) cron = "";
+        if (!exec) exec = "";
+
+        int needed = snprintf(NULL, 0, "%s{\"id\":%d,\"name\":\"%s\",\"schedule\":\"%s\",\"execution\":\"%s\"}",
+                             first_row ? "" : ",", id, name, cron, exec);
+
+        if (pos + needed + 10 >= buffer_size) {
+            buffer_size = buffer_size * 2 + needed;
+            char *new_buffer = realloc(json_result, buffer_size);
+            if (!new_buffer) {
+                sqlite3_finalize(stmt);
+                free(json_result);
+                return NULL;
+            }
+            json_result = new_buffer;
         }
 
-        strcat(json_result, row_buffer);
-        json_size += strlen(row_buffer);
+        pos += snprintf(json_result + pos, buffer_size - pos,
+                      "%s{\"id\":%d,\"name\":\"%s\",\"schedule\":\"%s\",\"execution\":\"%s\"}",
+                      first_row ? "" : ",", id, name, cron, exec);
+        first_row = 0;
     }
 
-    strcat(json_result, "}]");
+    pos += snprintf(json_result + pos, buffer_size - pos, "]}");
     sqlite3_finalize(stmt);
-
     return json_result;
 }
