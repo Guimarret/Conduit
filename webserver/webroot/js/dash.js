@@ -40,7 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch("http://localhost:8080/api/dag_data");
       const responseData = await response.json();
-      // Extract the tasks array from the response
       dagsData = responseData.tasks || [];
       renderDags(dagsData);
     } catch (error) {
