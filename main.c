@@ -3,6 +3,7 @@
 #include "thread.h"
 #include "scheduler.h"
 #include "database.h"
+#include "logger.h"
 
 void initialize_test_tasks(void) {
 
@@ -17,6 +18,8 @@ void initialize_test_tasks(void) {
 
 int main(void){
     sqlite3 *db;
+
+    init_logging("app.log");
     db = initialize_database();
     dag_migration(db);
 
@@ -34,5 +37,6 @@ int main(void){
     }
 
     shutdown_database(db);
+    close_logging();
     return 0;
 }
