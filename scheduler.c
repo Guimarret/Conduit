@@ -6,6 +6,7 @@
 #include "scheduler.h"
 #include "cron.h"
 #include "thread.h"
+#include "logger.h"
 
 Task *taskListHead = NULL;
 
@@ -36,14 +37,14 @@ int is_time_to_run(const char *cronExpression, struct CronTime now) {
 
 void execute_task(Task task) {
     spawn_worker_thread(&task);
-    printf("Task triggered: %s\n", task.taskName);
+    log_message("Task triggered: %s\n", task.taskName);
 }
 
 Task* add_task(const char *name, const char *cronExpression, const char *execution) {
     // Still don't know the best way to set the tasks, didn't want to add in the binaries
     Task *new_task = malloc(sizeof(Task));
     if (new_task == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
+        log_message("Memory allocation failed\n");
         return NULL;
     }
 
@@ -65,7 +66,7 @@ void free_tasks() {
         current = next;
     }
     taskListHead = NULL;
-    fprintf(stderr, "Tasks freed successfully\n");
+    log_message("Tasks freed successfully\n");
 }
 
 void scheduler() {

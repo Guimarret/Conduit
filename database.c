@@ -4,6 +4,7 @@
 #include <sqlite3.h>
 #include <string.h>
 #include "scheduler.h"
+#include "logger.h"
 
 sqlite3* initialize_database() {
     sqlite3 *db;
@@ -12,19 +13,19 @@ sqlite3* initialize_database() {
 
     rc = sqlite3_open("sqlite_test.db", &db);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+        log_message("Cannot open database: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         exit(1);
     }
 
-    printf("Database created or already initialized.\n");
+    log_message("Database created or already initialized.\n");
 
     return db;
 }
 
 void shutdown_database(sqlite3 *db) {
     sqlite3_close(db);
-    printf("Database shutdown.\n");
+    log_message("Database shutdown.\n");
 }
 
 sqlite3* dag_migration(sqlite3 *db){
@@ -33,7 +34,7 @@ sqlite3* dag_migration(sqlite3 *db){
 
     sql = "CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, taskName TEXT NOT NULL, cronExpression TEXT NOT NULL, taskExecution TEXT NOT NULL)";
     sqlite3_exec(db, sql,0,0, &ErrMsg);
-    printf("Migration executed");
+    log_message("Migration executed");
     return db;
 }
 
@@ -61,24 +62,24 @@ sqlite3* dag_import(sqlite3 *db, Task *task){
 
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        log_message("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
     } else {
         rc = sqlite3_step(stmt);
         if (rc == SQLITE_ROW) {
-            printf("Table has data.\n");
+            log_message("Table has data.\n");
             sqlite3_finalize(stmt);
             return db;
         } else if (rc == SQLITE_DONE) {
-            printf("Table is empty.\n");
+            log_message("Table is empty.\n");
             while (task != NULL) {
                 insert_into_db(db, task);
                 task = task->next;
             }
-            printf("Dags imported");
+            log_message("Dags imported");
             sqlite3_finalize(stmt);
             return db;
         } else {
-            fprintf(stderr, "Error executing statement: %s\n", sqlite3_errmsg(db));
+            log_message("Error executing statement: %s\n", sqlite3_errmsg(db));
         }
         sqlite3_finalize(stmt);
     }

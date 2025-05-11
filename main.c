@@ -13,7 +13,7 @@ void initialize_test_tasks(void) {
     add_task("Weekly Cleanup", "0 0 * * 0", "cleanup_temp");
     add_task("print_bin", "* * * * *", "print_bin");
 
-    printf("Test tasks initialized successfully\n");
+    log_message("Test tasks initialized successfully\n");
 }
 
 int main(int argc, char *argv[]){
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
     start_scheduler_thread();
 
     while(1){
-        printf("Main program is running\n");
+        log_message("Main program is running\n");
         sleep(20);
     }
 

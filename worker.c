@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
+#include "logger.h"
 
 #define PATH_MAX 1024
 // Thinking about creating binarys files that are executed here but idk how should i pass the other params needed in the scheduler
@@ -23,7 +24,7 @@ int is_executable(const char *path) {
 
 int execute_binary_exec(const char *path, char *const argv[]) {
     if (!is_executable(path)) {
-        fprintf(stderr, "Error: '%s' doesn't exist or isn't executable\n", path);
+        log_message("Error: '%s' doesn't exist or isn't executable\n", path);
         return -1;
     }
 
@@ -54,7 +55,7 @@ void worker(int taskId, char taskExecution[64]){
     char cwd[PATH_MAX];
 
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("Current working directory: %s\n", cwd);
+        log_message("Current working directory: %s\n", cwd);
     } else {
         perror("getcwd() error");
     }
@@ -64,7 +65,7 @@ void worker(int taskId, char taskExecution[64]){
 
     strcpy(full_path, cwd); strcat(full_path, "/dags/"); strcat(full_path, taskExecution);
 
-    printf("Full path for binary execution %s\n", full_path);
+    log_message("Full path for binary execution %s\n", full_path);
 
     execute_binary_exec(full_path, NULL);
     return;

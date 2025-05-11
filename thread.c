@@ -7,6 +7,7 @@
 #include "scheduler.h"
 #include "hash.h"
 #include "webserver.h"
+#include "logger.h"
 
 void *thread_scheduler_function(void *arg) {
     scheduler();
@@ -17,7 +18,7 @@ void *thread_worker_function(void *arg) {
     ThreadParams* params = (ThreadParams*)arg;
 
     // Now you can use the parameters
-    printf("Worker processing task ID: %d, execution: %s\n",
+    log_message("Worker processing task ID: %d, execution: %s\n",
             params->taskId, params->taskExecution);
 
     worker(params->taskId, params->taskExecution);
@@ -41,7 +42,7 @@ void start_scheduler_thread() {
     }
     pthread_detach(thread_id);
     // Getting warn with just the thread_id and the makefile Werror flag dont compile irra!!
-    printf("Thread started with ID: %ld\n", (unsigned long)thread_id);
+    log_message("Thread started with ID: %ld\n", (unsigned long)thread_id);
 
     return;
 }
@@ -54,7 +55,7 @@ void start_webserver_thread(sqlite3 *db) {
         exit(EXIT_FAILURE);
     }
     pthread_detach(thread_id);
-    printf("Thread started with ID: %ld\n", (unsigned long)thread_id);
+    log_message("Thread started with ID: %ld\n", (unsigned long)thread_id);
 
     return;
 }
@@ -63,7 +64,7 @@ void spawn_worker_thread(Task *task) {
     pthread_t thread_id;
 
     if (task == NULL) {
-           fprintf(stderr, "Error: Task is NULL\n");
+           log_message("Error: Task is NULL\n");
            return;
        }
 
@@ -87,7 +88,7 @@ void spawn_worker_thread(Task *task) {
     }
     pthread_detach(thread_id);
 
-    printf("Worker thread start with ID: %ld\n", (unsigned long)thread_id);
+    log_message("Worker thread start with ID: %ld\n", (unsigned long)thread_id);
 
     return;
 }

@@ -1,5 +1,6 @@
 #include "civetweb/civetweb.h"
 #include <stdio.h>
+#include "../logger.h"
 
 static int home_handler(struct mg_connection *conn, void *cbdata) {
     mg_send_file(conn, "./webroot/html/home.html");
@@ -26,7 +27,7 @@ int main(void) {
     mg_set_request_handler(ctx, "/home", home_handler, NULL);
     mg_set_request_handler(ctx, "/dash", dash_handler, NULL);
 
-    printf("Server running at http://localhost:9000. Press Enter to quit.\n");
+    log_message("Server running at http://localhost:9000. Press Enter to quit.\n");
     getchar();
 
     mg_stop(ctx);

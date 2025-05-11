@@ -5,6 +5,7 @@
 #include <time.h>
 #include "civetweb/civetweb.h"
 #include "database.h"
+#include "logger.h"
 
 static int api_data_handler(struct mg_connection *conn, void *cbdata) {
     sqlite3 *db = (sqlite3 *)cbdata;
@@ -47,7 +48,7 @@ int initialize_webserver(sqlite3 *db) {
     ctx = mg_start(NULL, 0, options);
     mg_set_request_handler(ctx, "/api/dag_data", api_data_handler, db);
 
-    printf("Server running at http://localhost:8080.\n");
+    log_message("Server running at http://localhost:8080.\n");
     getchar();
 
     mg_stop(ctx);
