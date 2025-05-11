@@ -16,10 +16,10 @@ void initialize_test_tasks(void) {
     printf("Test tasks initialized successfully\n");
 }
 
-int main(void){
+int main(int argc, char *argv[]){
     sqlite3 *db;
 
-    init_logging("app.log");
+    int result = init_logging(argc, argv);
     db = initialize_database();
     dag_migration(db);
 

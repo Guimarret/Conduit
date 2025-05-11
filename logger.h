@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-int init_logging(const char* filename, int argc, char *argv[]);
+int init_logging(int argc, char *argv[]);
 void log_message(const char* format, ...);
 void close_logging();
 
