@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 
-void init_logging(const char* filename);
-void log_message(const char* message);
+int init_logging(const char* filename, int argc, char *argv[]);
+void log_message(const char* format, ...);
 void close_logging();
 
 #endif
