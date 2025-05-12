@@ -19,12 +19,16 @@ void initialize_test_tasks(void) {
 int main(int argc, char *argv[]){
     sqlite3 *db;
 
-    int result = init_logging(argc, argv);
+    int log_status = init_logging(argc, argv);
+    if (log_status != 0) {
+        fprintf(stderr, "Failed to initialize logging. Exiting.\n");
+        return 1;
+    }
+
     db = initialize_database();
     dag_migration(db);
 
     initialize_test_tasks();
-
 
     dag_import(db, taskListHead);
 

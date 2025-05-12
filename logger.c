@@ -10,8 +10,10 @@ void log_message(const char* format, ...) {
     va_start(args, format);
     if (debug_mode) {
         vfprintf(stdout, format, args);
-    } else {
+        fflush(stdout);
+    } else if (log_file != NULL) {
         vfprintf(log_file, format, args);
+        fflush(log_file);
     }
     va_end(args);
 }
@@ -33,7 +35,7 @@ int init_logging(int argc, char *argv[]) {
     }
 
     log_message("This is a test message: %d\n", 42);
-    return 1;
+    return 0;
 }
 
 void close_logging() {
