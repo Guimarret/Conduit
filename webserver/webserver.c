@@ -1,14 +1,16 @@
-#include "civetweb/civetweb.h"
 #include <stdio.h>
+#include <string.h>
+#include "civetweb/civetweb.h"
 #include "../logger.h"
-
-static int home_handler(struct mg_connection *conn, void *cbdata) {
-    mg_send_file(conn, "./webroot/html/home.html");
-    return 1;
-}
+#include "../responses.h"
 
 static int dash_handler(struct mg_connection *conn, void *cbdata) {
     mg_send_file(conn, "./webroot/html/dash.html");
+    return 1;
+}
+
+static int redirect_to_home_handler(struct mg_connection *conn, void *cbdata) {
+    mg_printf(conn, HTTP_HEADER_302_REDIRECT, "/dash");
     return 1;
 }
 
@@ -18,14 +20,15 @@ int main(void) {
 
     const char *options[] = {
         "listening_ports", "9000",
-        "document_root", "./webroot", // Path to static files
-        "enable_directory_listing", "no", // Optional
+        "document_root", "./webroot",
+        "enable_directory_listing", "no",
         NULL
     };
     ctx = mg_start(NULL, 0, options);
 
-    mg_set_request_handler(ctx, "/home", home_handler, NULL);
     mg_set_request_handler(ctx, "/dash", dash_handler, NULL);
+    mg_set_request_handler(ctx, "**", redirect_to_home_handler, NULL);
+
 
     log_message("Server running at http://localhost:9000. Press Enter to quit.\n");
     getchar();
