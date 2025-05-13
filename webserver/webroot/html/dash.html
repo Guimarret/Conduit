@@ -6,14 +6,13 @@
         <title>DAG Dashboard</title>
         <link rel="icon" type="image/x-icon" href="../Favicon/favicon.ico" />
         <script src="https://d3js.org/d3.v7.min.js"></script>
-        <link rel="stylesheet" href="../css/dash.css" />
+        <link rel="stylesheet" href="/css/dash.css" />
     </head>
     <body>
-        <script type="module" src="../js/dash.js"></script>
-        <script type="module" src="../js/sample.js"></script>
+        <script type="module" src="/js/dash.js"></script>
         <div class="dashboard-container">
             <header>
-                <h1>DAG Dashboard</h1>
+                <h1>Dashboard</h1>
                 <div class="search-container">
                     <input
                         type="text"
@@ -21,9 +20,34 @@
                         placeholder="Search DAGs..."
                     />
                     <button id="refresh-btn">Refresh</button>
+                    <button id="add-dag-btn" class="add-dag-btn">Add DAG</button>
                 </div>
             </header>
             <div class="dags-container" id="dags-container"></div>
+
+            <div id="dag-form-modal" class="form-modal" style="display:none;">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h2>Add New DAG</h2>
+                    <form id="add-dag-form">
+                        <div class="form-group">
+                            <label for="dag-name">Task Name:</label>
+                            <input type="text" id="dag-name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dag-cron">Scheduling:</label>
+                            <input type="text" id="dag-cron" name="cron_job" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dag-second-name">Binary name:</label>
+                            <input type="text" id="binary_name" name="binary_name" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">Submit</button>
+                            <button type="button" class="btn-cancel">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    </body>
-</html>
+    </body

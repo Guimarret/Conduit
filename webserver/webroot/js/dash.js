@@ -59,4 +59,43 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     renderDags(filteredDags);
   });
+
+  const modal = document.getElementById("dag-form-modal");
+  const addDagBtn = document.getElementById("add-dag-btn");
+  const closeModalBtn = document.querySelector(".close-modal");
+  const cancelBtn = document.querySelector(".btn-cancel");
+  const addDagForm = document.getElementById("add-dag-form");
+
+  addDagBtn.addEventListener("click", () => {
+    modal.style.display = "flex";
+  });
+  const closeModal = () => {
+    modal.style.display = "none";
+    addDagForm.reset();
+  };
+
+  closeModalBtn.addEventListener("click", closeModal);
+  cancelBtn.addEventListener("click", closeModal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+
+  addDagForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(addDagForm);
+    const dagData = {
+      name: formData.get("name"),
+      cron_job: formData.get("cron_job"),
+      second_name: formData.get("binary_name"),
+    };
+
+    console.log("New DAG data:", dagData);
+
+    // Here you would typically send this data to your backend API
+    // For now, just close the modal
+    closeModal();
+  });
 });
