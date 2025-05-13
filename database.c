@@ -37,6 +37,7 @@ sqlite3* dag_migration(sqlite3 *db){
     log_message("Migration executed");
     return db;
 }
+
 sqlite3* insert_new_dag(sqlite3 *db, Task *task){
     const char *sql;
     sqlite3_stmt *stmt;

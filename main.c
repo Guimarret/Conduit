@@ -18,7 +18,6 @@ void initialize_test_tasks(void) {
 
 int main(int argc, char *argv[]){
     sqlite3 *db;
-
     int log_status = init_logging(argc, argv);
     if (log_status != 0) {
         fprintf(stderr, "Failed to initialize logging. Exiting.\n");
@@ -28,9 +27,12 @@ int main(int argc, char *argv[]){
     db = initialize_database();
     dag_migration(db);
 
-    initialize_test_tasks();
-
-    dag_import(db, taskListHead);
+    initialize_test_tasks(); // Remove today if possible (13-05)
+    while(1){
+        free_tasks();
+        dag_import(db, taskListHead);
+        sleep(30);
+    }
 
     start_webserver_thread(db);
     start_scheduler_thread();

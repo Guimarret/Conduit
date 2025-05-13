@@ -113,7 +113,6 @@ static int create_task_handler(struct mg_connection *conn, void *cbdata) {
                   (int)strlen(RESPONSE_ERROR_NO_VALID_TASKS),
                   RESPONSE_ERROR_NO_VALID_TASKS);
     }
-
     return 1;
 }
 
