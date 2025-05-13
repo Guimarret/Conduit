@@ -41,7 +41,6 @@ void start_scheduler_thread() {
         exit(EXIT_FAILURE);
     }
     pthread_detach(thread_id);
-    // Getting warn with just the thread_id and the makefile Werror flag dont compile irra!!
     log_message("Thread started with ID: %ld\n", (unsigned long)thread_id);
 
     return;
@@ -68,14 +67,12 @@ void spawn_worker_thread(Task *task) {
            return;
        }
 
-       // Allocate memory for parameters
        ThreadParams* params = malloc(sizeof(ThreadParams));
        if (params == NULL) {
            perror("Failed to allocate memory for thread parameters");
            exit(EXIT_FAILURE);
     }
 
-    // To be fair this is more like testing things than anything
     int taskId = 0;
     taskId = hashString(task->taskName);
     params->taskId = taskId;
@@ -83,7 +80,7 @@ void spawn_worker_thread(Task *task) {
 
     if (pthread_create(&thread_id, NULL, thread_worker_function, params) != 0) {
         perror("Failed to create worker thread");
-        free(params);  // Clean up on error
+        free(params);
         exit(EXIT_FAILURE);
     }
     pthread_detach(thread_id);
