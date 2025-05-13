@@ -55,4 +55,9 @@
                                     "Access-Control-Allow-Origin: *\r\n"\
                                     "\r\n"
 
+#define HTTP_HEADER_302_REDIRECT "HTTP/1.1 302 Found\r\n"\
+                "Location: %s\r\n"\
+                "Content-Length: 0\r\n"\
+                "Access-Control-Allow-Origin: *\r\n"\
+                "\r\n"
 #endif /* RESPONSES_H */
