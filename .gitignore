@@ -4,5 +4,4 @@ output
 **.db
 flake.lock
 result
-.DS_Store
-webserver/webserver
+app.log
