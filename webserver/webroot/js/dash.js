@@ -98,4 +98,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // For now, just close the modal
     closeModal();
   });
+
+  // Add refresh button functionality
+  const refreshBtn = document.getElementById("refresh-btn");
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", fetchAndRenderDags);
+  }
 });
