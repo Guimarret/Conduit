@@ -99,9 +99,92 @@ document.addEventListener("DOMContentLoaded", () => {
     closeModal();
   });
 
-  // Add refresh button functionality
+  // Still not working but working on
   const refreshBtn = document.getElementById("refresh-btn");
   if (refreshBtn) {
     refreshBtn.addEventListener("click", fetchAndRenderDags);
   }
+});
+
+// Initialize Flatpickr
+flatpickr("#start-date", {
+  dateFormat: "Y-m-d",
+  disable: [
+    function (date) {
+      return date.getDay() === 0 || date.getDay() === 6;
+    },
+  ],
+});
+
+// Time dropdowns
+const hours = Array.from({ length: 24 }, (_, i) =>
+  i.toString().padStart(2, "0"),
+);
+const minutes = Array.from({ length: 60 }, (_, i) =>
+  i.toString().padStart(2, "0"),
+);
+
+const hourSelect = document.getElementById("hour");
+const minuteSelect = document.getElementById("minute");
+
+hours.forEach((h) => {
+  const option = document.createElement("option");
+  option.value = h;
+  option.text = h;
+  hourSelect.appendChild(option);
+});
+
+minutes.forEach((m) => {
+  const option = document.createElement("option");
+  option.value = m;
+  option.text = m;
+  minuteSelect.appendChild(option);
+});
+
+// Tab functionality
+document.querySelectorAll(".tab-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    document
+      .querySelectorAll(".tab-button")
+      .forEach((b) => b.classList.remove("active"));
+    document
+      .querySelectorAll(".tab-content")
+      .forEach((c) => c.classList.remove("active"));
+
+    button.classList.add("active");
+    document.getElementById(button.dataset.tab).classList.add("active");
+  });
+});
+
+// Day selection
+document.querySelectorAll(".day").forEach((day) => {
+  day.addEventListener("click", () => {
+    if (!day.classList.contains("disabled")) {
+      day.classList.toggle("selected");
+    }
+  });
+});
+
+// Frequency change
+document.getElementById("frequency").addEventListener("change", (e) => {
+  const daysContainer = document.getElementById("days-selection");
+  if (e.target.value === "daily") {
+    document
+      .querySelectorAll(".day")
+      .forEach((day) => day.classList.add("selected"));
+    daysContainer.style.display = "none";
+  } else {
+    daysContainer.style.display = "block";
+  }
+});
+
+// Modal control
+document.getElementById("openSchedule").addEventListener("click", () => {
+  document.getElementById("scheduleModal").style.display = "flex";
+});
+
+document.querySelectorAll(".form-modal-close, .cancel-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.getElementById("scheduleModal").style.display = "none";
+  });
 });

@@ -133,7 +133,7 @@ button:hover {
 
 /* Modal Overlay */
 .form-modal {
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     position: fixed;
@@ -185,8 +185,8 @@ button:hover {
 /* Close Button */
 .form-modal-close {
     position: absolute;
-    top: 16px;
-    right: 20px;
+    top: 1rem;
+    right: 1rem;
     font-size: 1.5rem;
     color: #888;
     background: none;
@@ -268,8 +268,110 @@ button:hover {
     flex-basis: 30%;
 }
 
+#days-selection {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
 #add-dag-form {
     display: flex;
     gap: 0.5rem;
     flex-direction: column;
+}
+
+.form-group {
+    align-items: center;
+}
+
+.form-actions {
+    text-align: center;
+}
+
+#schedule-form {
+    padding: 1.5em;
+}
+
+/* Schedule Modal Enhancements */
+.tab-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    background: #f0f4f8;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-button.active {
+    background: #3498db;
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.days-container {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin: 10px 0;
+    padding: 0.2rem;
+    padding-bottom: 0.3rem;
+}
+
+.day {
+    padding: 8px;
+    text-align: center;
+    background: #f0f4f8;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.day.selected {
+    background: #3498db;
+    color: white;
+}
+
+.day.disabled {
+    background: #e0e0e0;
+    cursor: not-allowed;
+}
+
+#time-selection .form-row {
+    gap: 0.5rem;
+    flex: auto;
+    display: flex;
+}
+
+#time-selection select {
+    flex: 1;
+    padding: 8px;
+}
+
+#frequency {
+    width: unset;
+    flex: auto;
+}
+
+#start-date {
+    flex: auto;
+    width: unset;
+}
+
+#appointment-days-label {
+    align-self: center;
+    padding: 0.1rem;
 }
