@@ -1,74 +1,83 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <unistd.h>
 #include <cjson/cJSON.h>
-#include "civetweb/civetweb.h"
+#include "mongoose.h"
 #include "database.h"
 #include "logger.h"
 #include "responses.h"
 
-static int api_data_handler(struct mg_connection *conn, void *cbdata) {
-    sqlite3 *db = (sqlite3 *)cbdata;
-    char *json_data = dags_status(db);
-    if (!json_data) {
-        mg_printf(conn, HTTP_HEADER_200_JSON, (int)strlen(RESPONSE_EMPTY_TASKS));
-        return 1;
-    }
+// Global database pointer for the webserver
+static sqlite3 *g_db = NULL;
 
-    size_t data_len = strlen(json_data);
-    mg_printf(conn, HTTP_HEADER_200_JSON, (int)data_len);
-    mg_write(conn, json_data, data_len);
-
-    free(json_data);
-    return 1;
+// HTTP response helper
+static void send_json_response(struct mg_connection *c, int status_code, const char *body) {
+    mg_http_reply(c, status_code, 
+                  "Content-Type: application/json\r\n"
+                  "Access-Control-Allow-Origin: *\r\n", 
+                  "%s", body);
 }
 
-static int create_task_handler(struct mg_connection *conn, void *cbdata) {
-    const struct mg_request_info *req_info = mg_get_request_info(conn);
-    sqlite3 *db = (sqlite3 *)cbdata;
+static void api_data_handler(struct mg_connection *c, struct mg_http_message *hm) {
+    char *json_data = dags_status(g_db);
+    if (!json_data) {
+        send_json_response(c, 200, RESPONSE_EMPTY_TASKS);
+        return;
+    }
+    
+    send_json_response(c, 200, json_data);
+    free(json_data);
+}
 
-    if (strcmp(req_info->request_method, "POST") != 0) {
-        mg_printf(conn, HTTP_HEADER_405_METHOD_NOT_ALLOWED, (int)strlen(RESPONSE_ERROR_METHOD_NOT_ALLOWED));
-        return 1;
+static void create_task_handler(struct mg_connection *c, struct mg_http_message *hm) {
+    if (mg_strcmp(hm->method, mg_str("POST")) != 0) {
+        send_json_response(c, 405, RESPONSE_ERROR_METHOD_NOT_ALLOWED);
+        return;
     }
 
-    long long content_length = req_info->content_length;
-    if (content_length <= 0 || content_length > 1024*1024) {  // Limit to 1MB for now
-        mg_printf(conn, HTTP_HEADER_400_BAD_REQUEST, (int)strlen(RESPONSE_ERROR_INVALID_BODY));
-        return 1;
+    if (hm->body.len <= 0 || hm->body.len > 1024*1024) {  // Limit to 1MB
+        send_json_response(c, 400, RESPONSE_ERROR_INVALID_BODY);
+        return;
     }
 
-    char *buffer = malloc(content_length + 1);
-    if (!buffer) {
-        mg_printf(conn, HTTP_HEADER_500_SERVER_ERROR, (int)strlen(RESPONSE_ERROR_MEMORY_ALLOCATION));
-        return 1;
+    char *body_str = malloc(hm->body.len + 1);
+    if (!body_str) {
+        send_json_response(c, 500, RESPONSE_ERROR_MEMORY_ALLOCATION);
+        return;
     }
+    
+    memcpy(body_str, hm->body.buf, hm->body.len);
+    body_str[hm->body.len] = '\0';
 
-    int bytes_read = mg_read(conn, buffer, content_length);
-    buffer[bytes_read] = '\0';
-
-    cJSON *json = cJSON_Parse(buffer);
-    free(buffer);
-    if (json == NULL) {
-        mg_printf(conn, HTTP_HEADER_400_BAD_REQUEST , (int)strlen(RESPONSE_ERROR_INVALID_JSON));
-        return 1;
+    cJSON *json = cJSON_Parse(body_str);
+    free(body_str);
+    
+    if (!json) {
+        send_json_response(c, 400, RESPONSE_ERROR_INVALID_JSON);
+        return;
     }
 
     int task_count = 0;
     int error_count = 0;
     cJSON *tasks_array = NULL;
+    int created_new_array = 0;
 
     if (cJSON_IsArray(json)) {
         tasks_array = json;
     } else if (cJSON_IsObject(json)) {
         tasks_array = cJSON_CreateArray();
+        if (!tasks_array) {
+            cJSON_Delete(json);
+            send_json_response(c, 500, RESPONSE_ERROR_MEMORY_ALLOCATION);
+            return;
+        }
         cJSON_AddItemReferenceToArray(tasks_array, json);
+        created_new_array = 1;
     } else {
         cJSON_Delete(json);
-        mg_printf(conn, HTTP_HEADER_400_BAD_REQUEST,(int)strlen(RESPONSE_ERROR_JSON_FORMAT));
-        return 1;
+        send_json_response(c, 400, RESPONSE_ERROR_JSON_FORMAT);
+        return;
     }
 
     int array_size = cJSON_GetArraySize(tasks_array);
@@ -79,7 +88,8 @@ static int create_task_handler(struct mg_connection *conn, void *cbdata) {
         cJSON *cronExpression = cJSON_GetObjectItem(task_obj, "cronExpression");
         cJSON *taskExecution = cJSON_GetObjectItem(task_obj, "taskExecution");
 
-        if (!taskName || !cronExpression || !taskExecution || !cJSON_IsString(taskName) || !cJSON_IsString(cronExpression) || !cJSON_IsString(taskExecution)) {
+        if (!taskName || !cronExpression || !taskExecution || 
+            !cJSON_IsString(taskName) || !cJSON_IsString(cronExpression) || !cJSON_IsString(taskExecution)) {
             error_count++;
             continue;
         }
@@ -92,11 +102,15 @@ static int create_task_handler(struct mg_connection *conn, void *cbdata) {
         strncpy(task.cronExpression, cronExpression->valuestring, sizeof(task.cronExpression) - 1);
         strncpy(task.taskExecution, taskExecution->valuestring, sizeof(task.taskExecution) - 1);
 
-        insert_new_dag(db, &task);
+        insert_new_dag(g_db, &task);
         task_count++;
     }
 
-    cJSON_Delete(json);
+    if (created_new_array) {
+        cJSON_Delete(tasks_array);  
+    } else {
+        cJSON_Delete(json);  // Just delete the original json
+    }
 
     if (task_count > 0) {
         char response_buffer[256];
@@ -106,46 +120,60 @@ static int create_task_handler(struct mg_connection *conn, void *cbdata) {
                 error_count > 0 ? ", " : "",
                 error_count > 0 ? "with some errors" : "");
 
-        mg_printf(conn, HTTP_HEADER_201_CREATED, (int)strlen(response_buffer));
-        mg_write(conn, response_buffer, strlen(response_buffer));
+        send_json_response(c, 201, response_buffer);
     } else {
-        mg_printf(conn, HTTP_HEADER_400_BAD_REQUEST "%s",
-                  (int)strlen(RESPONSE_ERROR_NO_VALID_TASKS),
-                  RESPONSE_ERROR_NO_VALID_TASKS);
+        send_json_response(c, 400, RESPONSE_ERROR_NO_VALID_TASKS);
     }
-    return 1;
 }
 
-static int redirect_wrong_endpoint(struct mg_connection *conn, void *cbdata) {
-    const struct mg_request_info *req_info = mg_get_request_info(conn);
-
-        char response_buffer[512];
-        snprintf(response_buffer, sizeof(response_buffer), RESPONSE_ERROR_ENDPOINT_NOT_FOUND, req_info->request_uri);
-
-        mg_printf(conn, HTTP_HEADER_404_NOT_FOUND, (int)strlen(response_buffer));
-        mg_write(conn, response_buffer, strlen(response_buffer));
-
-        return 1;
+// Main event handler
+static void event_handler(struct mg_connection *c, int ev, void *ev_data) {
+    if (ev == MG_EV_HTTP_MSG) {
+        struct mg_http_message *hm = (struct mg_http_message *) ev_data;
+        
+        // Route handling
+        if (mg_match(hm->uri, mg_str("/api/dag_data"), NULL)) {
+            api_data_handler(c, hm);
+        } else if (mg_match(hm->uri, mg_str("/api/new_dag"), NULL)) {
+            create_task_handler(c, hm);
+        } else {
+            // Handle 404 - endpoint not found
+            char response_buffer[1024];
+            char uri_str[512];
+            
+            // Safely extract URI
+            size_t uri_len = hm->uri.len < sizeof(uri_str) - 1 ? hm->uri.len : sizeof(uri_str) - 1;
+            memcpy(uri_str, hm->uri.buf, uri_len);
+            uri_str[uri_len] = '\0';
+            
+            snprintf(response_buffer, sizeof(response_buffer), 
+                    RESPONSE_ERROR_ENDPOINT_NOT_FOUND, uri_str);
+            
+            send_json_response(c, 404, response_buffer);
+        }
+    }
 }
 
 int initialize_webserver(sqlite3 *db) {
-    struct mg_context *ctx;
-    mg_init_library(0);
+    struct mg_mgr mgr;
+    struct mg_connection *c;
 
-    const char *options[] = {
-        "listening_ports", "8080",
-        "enable_directory_listing", "no",
-        NULL
-    };
-    ctx = mg_start(NULL, 0, options);
-    mg_set_request_handler(ctx, "/api/dag_data", api_data_handler, db);
-    mg_set_request_handler(ctx, "/api/new_dag", create_task_handler, db);
-    mg_set_request_handler(ctx, "**", redirect_wrong_endpoint, NULL);
+    g_db = db;
+    
+    mg_mgr_init(&mgr);
 
-    log_message("Server running at http://localhost:8080.\n");
-    getchar();
-
-    mg_stop(ctx);
-    mg_exit_library();
+    c = mg_http_listen(&mgr, "http://0.0.0.0:8080", event_handler, &mgr);
+    if (c == NULL) {
+        log_message("Failed to create HTTP listener\n");
+        return -1;
+    }
+    
+    log_message("Server running at http://localhost:8080\n");
+    
+    while (1) {
+        mg_mgr_poll(&mgr, 1000);
+    }
+    
+    mg_mgr_free(&mgr);
     return 0;
 }
