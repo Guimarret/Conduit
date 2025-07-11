@@ -28,18 +28,17 @@ int main(int argc, char *argv[]){
     dag_migration(db);
 
     initialize_test_tasks(); // Remove today if possible (13-05)
-    while(1){
-        free_tasks();
-        dag_import(db, taskListHead);
-        sleep(30);
-    }
-
+    
+    // Start the webserver and scheduler threads
     start_webserver_thread(db);
     start_scheduler_thread();
 
+    // Main loop for DAG import and general operation
     while(1){
+        free_tasks();
+        dag_import(db, taskListHead);
         log_message("Main program is running\n");
-        sleep(20);
+        sleep(30);
     }
 
     shutdown_database(db);
