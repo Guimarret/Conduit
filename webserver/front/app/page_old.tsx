@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import LoginScreen from "./components/login-screen"
 import TaskDashboard from "./components/task-dashboard"

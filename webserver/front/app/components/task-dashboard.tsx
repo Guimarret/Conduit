@@ -1,20 +1,29 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Calendar, Clock, Play, Pause, Settings, MoreHorizontal } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Plus, Calendar, Clock, Play, Pause, Settings, MoreHorizontal, Trash2 } from "lucide-react"
+import { Button } from "../../components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
+import { Badge } from "../../components/ui/badge"
+import { Alert, AlertDescription } from "../../components/ui/alert"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu"
 import TaskCreationModal from "./task-creation-modal"
 import type { Task } from "../types/task"
+import EditTaskModal from "./edit-task-modal"
+import DeleteConfirmationModal from "./delete-confirmation-modal"
+import Notification from "./notification"
 
 export default function TaskDashboard() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [deletingTaskId, setDeletingTaskId] = useState<number | null>(null)
+  const [notification, setNotification] = useState<{
+    message: string
+    type: "success" | "error"
+  } | null>(null)
 
   useEffect(() => {
     fetchTasks()
@@ -110,8 +119,27 @@ export default function TaskDashboard() {
   }
 
   const handleTaskAction = (taskId: number, action: string) => {
-    console.log(`${action} task ${taskId}`)
-    // Here you would implement the actual task actions
+    const task = tasks.find((t) => t.id === taskId)
+
+    switch (action) {
+      case "edit":
+        if (task) {
+          setEditingTask(task)
+        }
+        break
+      case "delete":
+        setDeletingTaskId(taskId)
+        break
+      case "run":
+      case "pause":
+        console.log(`${action} task ${taskId}`)
+        break
+    }
+  }
+
+  const showNotification = (message: string, type: "success" | "error") => {
+    setNotification({ message, type })
+    setTimeout(() => setNotification(null), 3000)
   }
 
   if (loading) {
@@ -187,6 +215,13 @@ export default function TaskDashboard() {
                       <Settings className="w-4 h-4 mr-2" />
                       Edit
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleTaskAction(task.id, "delete")}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -228,6 +263,26 @@ export default function TaskDashboard() {
       )}
 
       <TaskCreationModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onTaskCreated={fetchTasks} />
+
+      <EditTaskModal
+        task={editingTask}
+        isOpen={!!editingTask}
+        onClose={() => setEditingTask(null)}
+        onTaskUpdated={fetchTasks}
+        onNotification={showNotification}
+      />
+
+      <DeleteConfirmationModal
+        taskId={deletingTaskId}
+        isOpen={!!deletingTaskId}
+        onClose={() => setDeletingTaskId(null)}
+        onTaskDeleted={fetchTasks}
+        onNotification={showNotification}
+      />
+
+      {notification && (
+        <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />
+      )}
     </div>
   )
 }
