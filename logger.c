@@ -34,7 +34,7 @@ int init_logging(int argc, char *argv[]) {
         }
     }
 
-    log_message("This is a test message: %d\n", 42);
+    // log_message("This is a test message: %d\n", 42);
     return 0;
 }
 

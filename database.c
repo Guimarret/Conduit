@@ -34,7 +34,7 @@ sqlite3* dag_migration(sqlite3 *db){
 
     sql = "CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, taskName TEXT NOT NULL, cronExpression TEXT NOT NULL, taskExecution TEXT NOT NULL)";
     sqlite3_exec(db, sql,0,0, &ErrMsg);
-    log_message("Migration executed");
+    log_message("Migration tasks executed \n");
     return db;
 }
 
@@ -152,4 +152,37 @@ char* dags_status(sqlite3 *db){
     pos += snprintf(json_result + pos, buffer_size - pos, "]}");
     sqlite3_finalize(stmt);
     return json_result;
+}
+
+int update_dag(sqlite3 *db, int id, const char *taskName, const char *cronExpression, const char *taskExecution) {
+    const char *sql = "UPDATE tasks SET taskName = ?, cronExpression = ?, taskExecution = ? WHERE id = ?";
+    sqlite3_stmt *stmt;
+    
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        log_message("Failed to prepare update statement: %s\n", sqlite3_errmsg(db));
+        return -1;
+    }
+    
+    sqlite3_bind_text(stmt, 1, taskName, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, cronExpression, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 3, taskExecution, -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 4, id);
+    
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    
+    if (rc != SQLITE_DONE) {
+        log_message("Failed to update task: %s\n", sqlite3_errmsg(db));
+        return -1;
+    }
+    
+    int changes = sqlite3_changes(db);
+    if (changes == 0) {
+        log_message("No task found with id %d\n", id);
+        return 0;
+    }
+    
+    log_message("Successfully updated task with id %d\n", id);
+    return 1;
 }

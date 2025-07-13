@@ -20,11 +20,11 @@ sqlite3* transactions_status_migration(sqlite3 *db){
 
     int rc = sqlite3_exec(db, sql, 0, 0, &ErrMsg);
     if (rc != SQLITE_OK) {
-        log_message("SQL error: %s", ErrMsg);
+        log_message("SQL error: %s \n", ErrMsg);
         sqlite3_free(ErrMsg);
         return NULL;
     }
-    log_message("Migration executed");
+    log_message("Migration transaction_status executed \n");
     return db;
 }
 
