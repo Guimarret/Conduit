@@ -7,6 +7,8 @@
 #include "cron.h"
 #include "thread.h"
 #include "logger.h"
+#include "transactions.h"
+#include "hash.h"
 
 Task *taskListHead = NULL;
 
@@ -69,7 +71,7 @@ void free_tasks() {
     log_message("Tasks freed successfully\n");
 }
 
-void scheduler() {
+void scheduler(sqlite3 *db) {
     while(1) {
         time_t now = time(NULL);
         struct tm *current_time = localtime(&now);
@@ -85,7 +87,11 @@ void scheduler() {
         Task *current = taskListHead; // *current is the current task what will iterate all the other ones through the linked list
         while (current != NULL) {
             if (is_time_to_run(current->cronExpression, cronTime)) {
+                int task_id = hashString(current->taskName);
+                log_task_status(db, task_id, "STARTED", current->taskExecution);
+                // Not sure yet if i have to add some unique id for tasks, technically one task can only be running exclusively but thinking about edge cases, im sleepy gonna think tomorrow
                 execute_task(*current);
+                log_task_status(db, task_id, "FINISHED", current->taskExecution);
             }
             current = current->next;
         }
