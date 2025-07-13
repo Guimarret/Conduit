@@ -6,7 +6,7 @@
 struct Task;
 typedef struct Task Task;
 
-void start_scheduler_thread(void);
+void start_scheduler_thread(sqlite3 *db);
 void spawn_worker_thread(Task *task);
 void start_webserver_thread(sqlite3 *db);
 

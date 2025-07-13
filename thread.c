@@ -10,7 +10,8 @@
 #include "logger.h"
 
 void *thread_scheduler_function(void *arg) {
-    scheduler();
+    sqlite3 *db = (sqlite3 *)arg;
+    scheduler(db);
     return NULL;
 }
 
@@ -33,10 +34,10 @@ void *thread_webserver_function(void *arg) {
     return NULL;
 }
 
-void start_scheduler_thread() {
+void start_scheduler_thread(sqlite3 *db) {
     pthread_t thread_id;
 
-    if (pthread_create(&thread_id, NULL, thread_scheduler_function, NULL) != 0) {
+    if (pthread_create(&thread_id, NULL, thread_scheduler_function, db) != 0) {
         perror("Failed to create thread");
         exit(EXIT_FAILURE);
     }

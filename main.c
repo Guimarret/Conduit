@@ -4,6 +4,7 @@
 #include "scheduler.h"
 #include "database.h"
 #include "logger.h"
+#include "transactions.h"
 
 void initialize_test_tasks(void) {
 
@@ -26,12 +27,13 @@ int main(int argc, char *argv[]){
 
     db = initialize_database();
     dag_migration(db);
+    transactions_status_migration(db);
 
     initialize_test_tasks(); // Remove today if possible (13-05)
     
     // Start the webserver and scheduler threads
     start_webserver_thread(db);
-    start_scheduler_thread();
+    start_scheduler_thread(db); 
 
     // Main loop for DAG import and general operation
     while(1){
