@@ -4,6 +4,7 @@
 // Success responses
 #define RESPONSE_SUCCESS_CREATED "{\"success\":true,\"message\":\"Task created successfully\"}"
 #define RESPONSE_SUCCESS_MULTIPLE "{\"success\":true,\"message\":\"%d task(s) created successfully%s%s\"}"
+#define RESPONSE_SUCCESS_UPDATED "{\"success\":true,\"message\":\"Task updated successfully\"}"
 
 // Error responses
 #define RESPONSE_ERROR_METHOD_NOT_ALLOWED "{\"error\":true,\"message\":\"Only POST method is allowed\"}"
@@ -14,6 +15,9 @@
 #define RESPONSE_ERROR_NO_VALID_TASKS "{\"error\":true,\"message\":\"No valid tasks found in request\"}"
 #define RESPONSE_ERROR_JSON_FORMAT "{\"error\":true,\"message\":\"JSON must be an object or array of objects\"}"
 #define RESPONSE_ERROR_ENDPOINT_NOT_FOUND "{\"error\":true,\"message\":\"Endpoint not found\",\"status\":404,\"path\":\"%s\"}"
+#define RESPONSE_ERROR_TASK_NOT_FOUND "{\"error\":true,\"message\":\"Task not found\"}"
+#define RESPONSE_ERROR_MISSING_ID "{\"error\":true,\"message\":\"Missing required field: id\"}"
+#define RESPONSE_ERROR_UPDATE_FAILED "{\"error\":true,\"message\":\"Failed to update task\"}"
 
 // Empty responses
 #define RESPONSE_EMPTY_TASKS "{\"tasks\":[]}"

@@ -126,6 +126,75 @@ static void create_task_handler(struct mg_connection *c, struct mg_http_message 
     }
 }
 
+static void dag_edit_handler(struct mg_connection *c, struct mg_http_message *hm) {
+    if (mg_strcmp(hm->method, mg_str("POST")) != 0) {
+        send_json_response(c, 405, RESPONSE_ERROR_METHOD_NOT_ALLOWED);
+        return;
+    }
+
+    if (hm->body.len <= 0 || hm->body.len > 1024*1024) {  // Limit to 1MB
+        send_json_response(c, 400, RESPONSE_ERROR_INVALID_BODY);
+        return;
+    }
+
+    char *body_str = malloc(hm->body.len + 1);
+    if (!body_str) {
+        send_json_response(c, 500, RESPONSE_ERROR_MEMORY_ALLOCATION);
+        return;
+    }
+    
+    memcpy(body_str, hm->body.buf, hm->body.len);
+    body_str[hm->body.len] = '\0';
+
+    cJSON *json = cJSON_Parse(body_str);
+    free(body_str);
+    
+    if (!json) {
+        send_json_response(c, 400, RESPONSE_ERROR_INVALID_JSON);
+        return;
+    }
+
+    if (!cJSON_IsObject(json)) {
+        cJSON_Delete(json);
+        send_json_response(c, 400, RESPONSE_ERROR_JSON_FORMAT);
+        return;
+    }
+
+    cJSON *id_obj = cJSON_GetObjectItem(json, "id");
+    if (!id_obj || !cJSON_IsNumber(id_obj)) {
+        cJSON_Delete(json);
+        send_json_response(c, 400, RESPONSE_ERROR_MISSING_ID);
+        return;
+    }
+
+    int id = id_obj->valueint;
+
+    cJSON *taskName = cJSON_GetObjectItem(json, "taskName");
+    cJSON *cronExpression = cJSON_GetObjectItem(json, "cronExpression");
+    cJSON *taskExecution = cJSON_GetObjectItem(json, "taskExecution");
+
+    if ((!taskName || !cJSON_IsString(taskName)) ||
+        (!cronExpression || !cJSON_IsString(cronExpression)) ||
+        (!taskExecution || !cJSON_IsString(taskExecution))) {
+        cJSON_Delete(json);
+        send_json_response(c, 400, RESPONSE_ERROR_MISSING_FIELDS);
+        return;
+    }
+
+    int result = update_dag(g_db, id, taskName->valuestring, 
+                           cronExpression->valuestring, taskExecution->valuestring);
+    
+    cJSON_Delete(json);
+
+    if (result == 1) {
+        send_json_response(c, 200, RESPONSE_SUCCESS_UPDATED);
+    } else if (result == 0) {
+        send_json_response(c, 404, RESPONSE_ERROR_TASK_NOT_FOUND);
+    } else {
+        send_json_response(c, 500, RESPONSE_ERROR_UPDATE_FAILED);
+    }
+}
+
 // Main event handler
 static void event_handler(struct mg_connection *c, int ev, void *ev_data) {
     if (ev == MG_EV_HTTP_MSG) {
@@ -136,6 +205,8 @@ static void event_handler(struct mg_connection *c, int ev, void *ev_data) {
             api_data_handler(c, hm);
         } else if (mg_match(hm->uri, mg_str("/api/new_dag"), NULL)) {
             create_task_handler(c, hm);
+        } else if (mg_match(hm->uri, mg_str("/api/dag_edit"), NULL)) {
+            dag_edit_handler(c, hm);
         } else {
             // Handle 404 - endpoint not found
             char response_buffer[1024];

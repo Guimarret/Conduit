@@ -7,3 +7,4 @@ sqlite3* dag_migration(sqlite3 *db);
 sqlite3* dag_import(sqlite3 *db, Task *task);
 char* dags_status(sqlite3 *db);
 sqlite3* insert_new_dag(sqlite3 *db, Task *task);
+int update_dag(sqlite3 *db, int id, const char *taskName, const char *cronExpression, const char *taskExecution);
