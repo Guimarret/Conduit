@@ -7,3 +7,4 @@ result
 app.log
 .DS_Store
 webserver/webserver
+.json
