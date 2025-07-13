@@ -5,6 +5,7 @@
 #define RESPONSE_SUCCESS_CREATED "{\"success\":true,\"message\":\"Task created successfully\"}"
 #define RESPONSE_SUCCESS_MULTIPLE "{\"success\":true,\"message\":\"%d task(s) created successfully%s%s\"}"
 #define RESPONSE_SUCCESS_UPDATED "{\"success\":true,\"message\":\"Task updated successfully\"}"
+#define RESPONSE_SUCCESS_DELETED "{\"success\":true,\"message\":\"Task deleted successfully\"}"
 
 // Error responses
 #define RESPONSE_ERROR_METHOD_NOT_ALLOWED "{\"error\":true,\"message\":\"Only POST method is allowed\"}"
@@ -18,6 +19,7 @@
 #define RESPONSE_ERROR_TASK_NOT_FOUND "{\"error\":true,\"message\":\"Task not found\"}"
 #define RESPONSE_ERROR_MISSING_ID "{\"error\":true,\"message\":\"Missing required field: id\"}"
 #define RESPONSE_ERROR_UPDATE_FAILED "{\"error\":true,\"message\":\"Failed to update task\"}"
+#define RESPONSE_ERROR_DELETE_FAILED "{\"error\":true,\"message\":\"Failed to delete task\"}"
 
 // Empty responses
 #define RESPONSE_EMPTY_TASKS "{\"tasks\":[]}"

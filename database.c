@@ -186,3 +186,33 @@ int update_dag(sqlite3 *db, int id, const char *taskName, const char *cronExpres
     log_message("Successfully updated task with id %d\n", id);
     return 1;
 }
+
+int delete_dag(sqlite3 *db, int id) {
+    const char *sql = "DELETE FROM tasks WHERE id = ?";
+    sqlite3_stmt *stmt;
+    
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        log_message("Failed to prepare delete statement: %s\n", sqlite3_errmsg(db));
+        return -1;
+    }
+    
+    sqlite3_bind_int(stmt, 1, id);
+    
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    
+    if (rc != SQLITE_DONE) {
+        log_message("Failed to delete task: %s\n", sqlite3_errmsg(db));
+        return -1;
+    }
+    
+    int changes = sqlite3_changes(db);
+    if (changes == 0) {
+        log_message("No task found with id %d\n", id);
+        return 0;
+    }
+    
+    log_message("Successfully deleted task with id %d\n", id);
+    return 1;
+}
