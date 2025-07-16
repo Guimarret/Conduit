@@ -2,6 +2,11 @@
 #include "scheduler.h"
 #include "dag.h"
 
+// Buffer size constants for JSON generation
+#define JSON_BUFFER_INITIAL_SIZE 2048
+#define JSON_DEPENDENCY_BUFFER_SIZE 1024
+#define JSON_DEP_STRING_SIZE 128
+
 // Core database functions
 sqlite3* initialize_database();
 void shutdown_database(sqlite3 *db);
@@ -46,3 +51,6 @@ TaskDependency* load_task_dependencies_db(sqlite3 *db, int task_id);
 
 // Enhanced transaction logging with DAG context
 int log_dag_task_status(sqlite3 *db, int task_id, int dag_id, int dag_execution_id, const char *status, const char *details);
+
+// Buffer management utilities
+char* ensure_buffer_capacity(char **buffer, size_t *current_size, size_t needed_size);

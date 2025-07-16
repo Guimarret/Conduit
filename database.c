@@ -6,6 +6,7 @@
 #include "scheduler.h"
 #include "logger.h"
 #include "dag.h"
+#include "database.h"
 
 sqlite3* initialize_database() {
     sqlite3 *db;
@@ -195,7 +196,7 @@ char* dags_status(sqlite3 *db){
     const char *sql = "SELECT id, taskName, cronExpression, taskExecution FROM tasks";
     sqlite3_stmt *stmt;
 
-    size_t buffer_size = 1024;
+    size_t buffer_size = JSON_BUFFER_INITIAL_SIZE;
     char *json_result = malloc(buffer_size);
     if (!json_result) return NULL;
 
@@ -223,14 +224,11 @@ char* dags_status(sqlite3 *db){
                              first_row ? "" : ",", id, name, cron, exec);
 
         if (pos + needed + 10 >= buffer_size) {
-            buffer_size = buffer_size * 2 + needed;
-            char *new_buffer = realloc(json_result, buffer_size);
-            if (!new_buffer) {
+            if (!ensure_buffer_capacity(&json_result, &buffer_size, pos + needed + 10)) {
                 sqlite3_finalize(stmt);
                 free(json_result);
                 return NULL;
             }
-            json_result = new_buffer;
         }
 
         pos += snprintf(json_result + pos, buffer_size - pos,
@@ -347,16 +345,25 @@ int insert_dag_task_db(sqlite3 *db, DAGTask *task) {
         return -1;
     }
     
-    // Convert dependencies to JSON string
-    char dependencies_json[1024] = "[";
+    // Convert dependencies to JSON string with safe buffer handling
+    char dependencies_json[JSON_DEPENDENCY_BUFFER_SIZE] = "[";
     TaskDependency *dep = task->dependencies;
     int first = 1;
+    size_t json_len = 1; // Start with length of "["
+    
     while (dep != NULL) {
-        if (!first) strcat(dependencies_json, ",");
-        char dep_str[128];
-        snprintf(dep_str, sizeof(dep_str), "{\"task_id\":%d,\"task_name\":\"%s\"}", 
-                dep->task_id, dep->task_name);
+        char dep_str[JSON_DEP_STRING_SIZE];
+        int dep_str_len = snprintf(dep_str, sizeof(dep_str), "%s{\"task_id\":%d,\"task_name\":\"%s\"}", 
+                                  first ? "" : ",", dep->task_id, dep->task_name);
+        
+        // Check if adding this dependency would overflow the buffer
+        if (json_len + dep_str_len + 2 >= JSON_DEPENDENCY_BUFFER_SIZE) { // +2 for closing "]"
+            log_message("Warning: Dependencies JSON truncated due to buffer size limit");
+            break;
+        }
+        
         strcat(dependencies_json, dep_str);
+        json_len += dep_str_len;
         first = 0;
         dep = dep->next;
     }
@@ -546,6 +553,23 @@ int log_dag_task_status(sqlite3 *db, int task_id, int dag_id, int dag_execution_
     }
 }
 
+// Buffer management utility function implementation
+char* ensure_buffer_capacity(char **buffer, size_t *current_size, size_t needed_size) {
+    if (needed_size <= *current_size) {
+        return *buffer;
+    }
+    
+    size_t new_size = *current_size * 2 + needed_size;
+    char *new_buffer = realloc(*buffer, new_size);
+    if (!new_buffer) {
+        return NULL;
+    }
+    
+    *buffer = new_buffer;
+    *current_size = new_size;
+    return *buffer;
+}
+
 // Forward declarations for internal functions
 DAGTask* load_dag_tasks_db(sqlite3 *db, int dag_id);
 int count_dag_tasks(DAGTask *task_list);
@@ -658,7 +682,7 @@ char* get_dags_json(sqlite3 *db) {
     const char *sql = "SELECT id, name, cron_expression, description, status FROM dags";
     sqlite3_stmt *stmt;
     
-    size_t buffer_size = 2048;
+    size_t buffer_size = JSON_BUFFER_INITIAL_SIZE;
     char *json_result = malloc(buffer_size);
     if (!json_result) return NULL;
 
@@ -688,14 +712,11 @@ char* get_dags_json(sqlite3 *db) {
                              first_row ? "" : ",", id, name, cron, desc, status);
 
         if (pos + needed + 10 >= buffer_size) {
-            buffer_size = buffer_size * 2 + needed;
-            char *new_buffer = realloc(json_result, buffer_size);
-            if (!new_buffer) {
+            if (!ensure_buffer_capacity(&json_result, &buffer_size, pos + needed + 10)) {
                 sqlite3_finalize(stmt);
                 free(json_result);
                 return NULL;
             }
-            json_result = new_buffer;
         }
 
         pos += snprintf(json_result + pos, buffer_size - pos,
@@ -715,7 +736,7 @@ char* get_dag_status_json(sqlite3 *db, int dag_id) {
                      "WHERE d.id = ? ORDER BY de.started_at DESC LIMIT 10";
     sqlite3_stmt *stmt;
     
-    size_t buffer_size = 2048;
+    size_t buffer_size = JSON_BUFFER_INITIAL_SIZE;
     char *json_result = malloc(buffer_size);
     if (!json_result) return NULL;
 
@@ -738,6 +759,18 @@ char* get_dag_status_json(sqlite3 *db, int dag_id) {
         const char *completed = (const char*)sqlite3_column_text(stmt, 6);
 
         if (!exec_id) continue;
+
+        int needed = snprintf(NULL, 0, "%s{\"execution_id\":\"%s\",\"status\":\"%s\",\"started_at\":\"%s\",\"completed_at\":\"%s\"}",
+                             first_row ? "" : ",", exec_id ? exec_id : "", status ? status : "", 
+                             started ? started : "", completed ? completed : "");
+
+        if (pos + needed + 10 >= buffer_size) {
+            if (!ensure_buffer_capacity(&json_result, &buffer_size, pos + needed + 10)) {
+                sqlite3_finalize(stmt);
+                free(json_result);
+                return NULL;
+            }
+        }
 
         if (!first_row) pos += snprintf(json_result + pos, buffer_size - pos, ",");
         pos += snprintf(json_result + pos, buffer_size - pos,
