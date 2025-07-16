@@ -338,12 +338,15 @@ static void create_dag_handler(struct mg_connection *c, struct mg_http_message *
     
     // Phase 1: Create all tasks without dependencies
     int task_count = cJSON_GetArraySize(tasks);
-    DAGTask **task_array = malloc(task_count * sizeof(DAGTask*));
-    if (!task_array) {
-        free_dag(dag);
-        cJSON_Delete(json);
-        send_json_response(c, 500, RESPONSE_ERROR_MEMORY_ALLOCATION);
-        return;
+    DAGTask **task_array = NULL;
+    if (task_count > 0) {
+        task_array = malloc(task_count * sizeof(DAGTask*));
+        if (!task_array) {
+            free_dag(dag);
+            cJSON_Delete(json);
+            send_json_response(c, 500, RESPONSE_ERROR_MEMORY_ALLOCATION);
+            return;
+        }
     }
     
     for (int i = 0; i < task_count; i++) {
