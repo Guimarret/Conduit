@@ -1,3 +1,6 @@
+#ifndef CONDUIT_CRON_H
+#define CONDUIT_CRON_H
+
 struct CronTime {
     int minute;
     int hour;
@@ -7,3 +10,5 @@ struct CronTime {
 };
 
 int match_cron_field(const char *field, int value, int min, int max);
+
+#endif

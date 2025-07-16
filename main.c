@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "thread.h"
 #include "scheduler.h"
 #include "database.h"
 #include "logger.h"
 #include "transactions.h"
+#include "dag_scheduler.h"
 
 void initialize_test_tasks(void) {
 
@@ -15,6 +17,18 @@ void initialize_test_tasks(void) {
     add_task("print_bin", "* * * * *", "print_bin");
 
     log_message("Test tasks initialized successfully\n");
+}
+
+// Start DAG scheduler in separate thread
+void start_dag_scheduler_thread(sqlite3 *db) {
+    pthread_t dag_scheduler_thread;
+    int result = pthread_create(&dag_scheduler_thread, NULL, (void*)dag_scheduler, db);
+    if (result != 0) {
+        log_message("Failed to create DAG scheduler thread\n");
+    } else {
+        log_message("DAG scheduler thread started\n");
+        pthread_detach(dag_scheduler_thread);
+    }
 }
 
 int main(int argc, char *argv[]){
@@ -31,16 +45,25 @@ int main(int argc, char *argv[]){
 
     initialize_test_tasks(); // Remove today if possible (13-05)
     
-    // Start the webserver and scheduler threads
+    log_message("Starting Conduit application with DAG support\n");
+    
+    // Start the webserver thread
     start_webserver_thread(db);
-    start_scheduler_thread(db); 
+    
+    // Start both legacy task scheduler and new DAG scheduler
+    start_scheduler_thread(db);      // Legacy individual task scheduling
+    start_dag_scheduler_thread(db);  // New DAG scheduling with dependencies
+    
+    log_message("All threads started successfully\n");
 
     // Main loop for DAG import and general operation
     while(1){
+        // Legacy task management (can be removed once fully migrated to DAGs)
         free_tasks();
         dag_import(db, taskListHead);
-        log_message("Main program is running\n");
-        sleep(30);
+        
+        log_message("Main program is running - both legacy tasks and DAGs active\n");
+        sleep(60); // Increased to 60 seconds to reduce log noise
     }
 
     shutdown_database(db);
